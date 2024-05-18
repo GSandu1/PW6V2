@@ -17,7 +17,23 @@ const users = [
 
   const validRoles = ['user', 'admin'];
 
-
+  app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    const user = users.find(u => u.username === username);
+    if (!user) {
+        return res.status(401).send('User not found');
+    }
+    if (user.password === password) {
+        const token = jwt.sign(
+            { username: user.username, role: user.role }, 
+            process.env.JWT_SECRET,
+            { expiresIn: '10m' }
+        );
+        res.json({ token });
+    } else {
+        res.status(401).send('Invalid credentials');
+    }
+});
 
 app.post('/token', (req, res) => {
     const { role } = req.body;
