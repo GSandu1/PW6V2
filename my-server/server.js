@@ -27,12 +27,16 @@ const users = [
         const token = jwt.sign(
             { username: user.username, role: user.role }, 
             process.env.JWT_SECRET,
-            { expiresIn: '10m' }
+            { expiresIn: '1m' }
         );
         res.json({ token });
     } else {
         res.status(401).send('Invalid credentials');
     }
+});
+
+app.get('/protected', authenticateToken, (req, res) => {
+    res.send(`Hello, ${req.user.username}`);
 });
 
 app.post('/token', (req, res) => {
@@ -45,7 +49,7 @@ app.post('/token', (req, res) => {
     const token = jwt.sign(
         { role: role },
         process.env.JWT_SECRET,
-        { expiresIn: '10m' } 
+        { expiresIn: '1m' } 
     );
 
     res.json({ token });
@@ -68,7 +72,12 @@ function authenticateToken(req, res, next) {
     if (token == null) return res.sendStatus(401);
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
+        if (err) {
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).send('Your token is expired');
+            }
+            return res.sendStatus(403); 
+        }
         req.user = user;
         next();
     });
@@ -188,4 +197,22 @@ require('./swagger.js')(app);
  *         description: Data view permission based on user role
  *       403:
  *         description: Access denied
+ */
+
+/**
+ * @openapi
+ * /protected:
+ *   get:
+ *     tags:
+ *       - Test
+ *     summary: Protected route that requires authentication
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Greeting to the user
+ *       401:
+ *         description: Authentication required or token is expired
+ *       403:
+ *         description: Access denied – authorization failure
  */
