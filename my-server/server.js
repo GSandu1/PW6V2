@@ -51,6 +51,16 @@ app.post('/token', (req, res) => {
     res.json({ token });
 });
 
+app.get('/data', authenticateToken, (req, res) => {
+    if (req.user.role === 'admin') {
+        res.send('You can read/write data.');
+    } else if (req.user.role === 'user') {
+        res.send('You can read data.');
+    } else {
+        res.status(403).send('Access Denied');
+    }
+});
+
 
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
