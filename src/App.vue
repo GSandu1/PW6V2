@@ -19,8 +19,6 @@ import axios from "axios";
 import Drawer from './components/Drawer.vue';
 
 
-const API_KEY = 'AIzaSyDG_VnWxWRmTfWclVIJ6GP1rJn0_TWz8Ws';
-const YOUTUBE_V3_URL = 'https://www.googleapis.com/youtube/v3/search';
 
 export default {
   name: "App",
@@ -42,17 +40,19 @@ export default {
       
     },
     fetchVideos(searchTerm) {
-      axios.get(YOUTUBE_V3_URL, {
-        params: {
-          key: API_KEY,
-          type: 'video',
-          part: 'snippet',
-          q: searchTerm
-        }
-      })
-      .then(response => {
-        this.videos = response.data.items;
-      });
+      setTimeout(()=>
+      axios.get('http://localhost:3000/api/videos', {
+    params: {
+      searchTerm: searchTerm,
+      pageToken: this.nextPageToken
+    }
+
+  })
+  .then(response => {
+    this.videos=response.data.items;
+
+  })
+,200)
     },
     onVideoSelect(video) {
       this.selectVideo = video;

@@ -2,6 +2,8 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
+const axios = require('axios');
+
 require('dotenv').config();
 
 const app = express();
@@ -32,6 +34,29 @@ const users = [
         res.json({ token });
     } else {
         res.status(401).send('Invalid credentials');
+    }
+});
+
+app.get('/api/videos', async (req, res) => {
+    const { searchTerm, pageToken } = req.query;
+    const API_KEY = process.env.YOUTUBE_API_KEY;
+    const YOUTUBE_V3_URL = 'https://www.googleapis.com/youtube/v3/search';
+
+    try {
+        const response = await axios.get(YOUTUBE_V3_URL, {
+            params: {
+                key: API_KEY,
+                type: 'video',
+                part: 'snippet',
+                q: searchTerm,
+                maxResults: 5,
+                pageToken
+            }
+        });
+        res.json({ items: response.data.items, nextPageToken: response.data.nextPageToken });
+    } catch (error) {
+        console.error('YouTube API error:', error);
+        res.status(500).json({ message: "Error fetching videos" });
     }
 });
 
